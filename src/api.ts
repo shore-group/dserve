@@ -13,6 +13,7 @@ import { Packbuilder } from 'nodegit/pack-builder';
 import { Readable } from 'stream';
 import { Container, ContainerInfo } from 'dockerode';
 
+import { config } from './config';
 import { l, getLoggerForBuild, closeLogger } from './logger';
 import { getBuildDir } from './builder';
 import { setInterval } from 'timers';
@@ -26,26 +27,20 @@ export type BranchName = string;
 export type PortNumber = number;
 export type ImageStatus = 'NoImage' | 'Inactive' | PortNumber;
 
-// TODO: move out to configuration files
-export const BUILD_LOG_FILENAME = 'dserve-build-log.txt';
-export const REPO = 'Automattic/wp-calypso';
-export const TAG_PREFIX = 'dserve-wpcalypso';
-const CLONE_PREFIX = 'git@github.com:';
-
 export const ONE_SECOND = 1000;
 export const ONE_MINUTE = 60 * ONE_SECOND;
 export const FIVE_MINUTES = 5 * ONE_MINUTE;
 export const TEN_MINUTES = 10 * ONE_MINUTE;
 export const CONTAINER_EXPIRY_TIME = FIVE_MINUTES;
 
-export const getImageName = (hash: CommitHash) => `${TAG_PREFIX}:${hash}`;
+export const getImageName = (hash: CommitHash) => `${config.build.tagPrefix}:${hash}`;
 export const extractCommitFromImage = (imageName: string): CommitHash => imageName.split(':')[1];
 
 /**
  * Returns which images are stored locally.
  * Polls locker docker daemon for image list
  */
-export const { refreshLocalImages, getLocalImages } = (function() {
+export const { refreshLocalImages, getLocalImages } = (function () {
 	let localImages = {};
 	return {
 		refreshLocalImages: async () => {
@@ -77,8 +72,6 @@ export async function deleteImage(hash: CommitHash) {
 	}
 }
 
-// docker run -it --name wp-calypso --rm -p 80:3000 -e
-// NODE_ENV=wpcalypso -e CALYPSO_ENV=wpcalypso wp-calypso"
 export async function startContainer(commitHash: CommitHash) {
 	l.log({ commitHash }, `Starting up container`);
 	const image = getImageName(commitHash);
@@ -95,23 +88,20 @@ export async function startContainer(commitHash: CommitHash) {
 		[],
 		process.stdout,
 		{
-			Tty: false,
-			ExposedPorts: { '3000/tcp': {} },
-			PortBindings: { '3000/tcp': [{ HostPort: freePort.toString() }] },
-			Env: ['NODE_ENV=wpcalypso', 'CALYPSO_ENV=wpcalypso'],
+			...config.build.containerCreateOptions,
+			PortBindings: _.mapValues(
+				config.build.containerCreateOptions.ExposedPorts,
+				() => [{ HostPort: freePort.toString() }]
+			)
 		},
-		(err, succ) => {
-			if (err) {
-				l.error({ commitHash, freePort, err }, `failed starting container`);
-				return;
-			}
-			l.log({ commitHash, freePort }, `successfully started container: ${succ}`);
-		}
+		(err, succ) => err
+			? l.error({ commitHash, freePort, err }, `failed starting container`)
+			: l.log({ commitHash, freePort }, `successfully started container: ${succ}`)
 	);
 	return;
 }
 
-const { getRunningContainers, refreshRunningContainers } = (function() {
+const { getRunningContainers, refreshRunningContainers } = (function () {
 	let containers: { [s: string]: ContainerInfo } = {};
 	return {
 		refreshRunningContainers: async () => {
@@ -141,14 +131,14 @@ async function getRemoteBranches(): Promise<Map<string, string>> {
 	let repo: git.Repository;
 
 	const start = Date.now();
-	l.log({ repository: REPO }, 'Refreshing branches list');
+	l.log({ repository: config.repo.project }, 'Refreshing branches list');
 
 	try {
 		if (!await fs.pathExists(repoDir)) {
 			await fs.mkdir(repoDir);
 		}
 		if (!await fs.pathExists(calypsoDir)) {
-			repo = await git.Clone.clone(`https://github.com/${REPO}`, calypsoDir);
+			repo = await git.Clone.clone(`https://github.com/${config.repo.project}`, calypsoDir);
 		} else {
 			repo = await git.Repository.open(calypsoDir);
 		}
@@ -185,31 +175,31 @@ async function getRemoteBranches(): Promise<Map<string, string>> {
 		});
 
 		l.log(
-			{ repository: REPO, refreshBranchTime: Date.now() - start },
+			{ repository: config.repo.project, refreshBranchTime: Date.now() - start },
 			'Finished refreshing branches'
 		);
 
 		repo.free();
 		return branchToCommitHashMap;
 	} catch (err) {
-		l.error({ err, repository: REPO }, 'Error creating branchName --> commitSha map');
+		l.error({ err, repository: config.repo.project }, 'Error creating branchName --> commitSha map');
 		return;
 	}
 }
 
-export const { refreshRemoteBranches, getCommitHashForBranch } = (function() {
+export const { refreshRemoteBranches, getCommitHashForBranch } = (function () {
 	let branches = new Map();
 	return {
 		refreshRemoteBranches: async () => {
 			branches = await getRemoteBranches();
 		},
-		getCommitHashForBranch: function(branch: BranchName): CommitHash | undefined {
+		getCommitHashForBranch: function (branch: BranchName): CommitHash | undefined {
 			return branches.get(branch);
 		},
 	};
 })();
 
-export const { touchCommit, getCommitAccessTime } = (function() {
+export const { touchCommit, getCommitAccessTime } = (function () {
 	const accesses = new Map();
 
 	const touchCommit = (hash: CommitHash) => accesses.set(hash, Date.now());
@@ -228,7 +218,7 @@ export function getExpiredContainers(containers: Array<ContainerInfo>, getAccess
 		const imageName: string = container.Image;
 
 		// exclude container if it wasnt created by this app
-		if (!imageName.startsWith(TAG_PREFIX)) {
+		if (!imageName.startsWith(config.build.tagPrefix)) {
 			return;
 		}
 
