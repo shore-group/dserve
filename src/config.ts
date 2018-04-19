@@ -1,26 +1,18 @@
 import * as Dockerode from 'dockerode';
-import * as bunyan from 'bunyan';
-import * as portfinder from 'portfinder';
 
 interface AppConfig {
     build: BuildConfig;
     repo: RepoConfig;
-    server: ServerConfig;
 };
 
 interface BuildConfig {
     containerCreateOptions: Dockerode.ContainerCreateOptions;
     logFilename: string;
-    logLevel: bunyan.LogLevel;
     tagPrefix: string;
 };
 
 interface RepoConfig {
     project: string;
-};
-
-interface ServerConfig {
-    logLevel: bunyan.LogLevel;
 };
 
 export const config: AppConfig = {
@@ -31,15 +23,10 @@ export const config: AppConfig = {
             Tty: false,
         },
         logFilename: 'dserve-build-log.txt',
-        logLevel: bunyan.DEBUG,
         tagPrefix: 'dserve-wpcalypso'
     },
 
     repo: {
         project: 'Automattic/wp-calypso'
-    },
-
-    server: {
-        logLevel: bunyan.DEBUG,
     },
 };
