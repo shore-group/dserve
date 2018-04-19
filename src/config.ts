@@ -5,9 +5,7 @@ import { LoggerOptions, DEBUG } from 'bunyan';
 
 interface AppConfig {
     build: BuildConfig;
-
     repo: RepoConfig;
-
     server: ServerConfig;
 };
 
@@ -29,7 +27,7 @@ interface ServerConfig {
 export const config: AppConfig = {
     build: {
         containerCreateOptions: {
-            Env: ['NODE_ENV=wpcalypso', 'CALYPSO_ENV=wpcalypso'],
+            Env: [ 'NODE_ENV=wpcalypso', 'CALYPSO_ENV=wpcalypso'],
             ExposedPorts: { '3000/tcp': {} },
             Tty: false,
         },
