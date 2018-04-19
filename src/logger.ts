@@ -4,6 +4,7 @@ import { Writable } from 'stream';
 
 import { CommitHash, getImageName } from './api';
 import { getLogPath } from './builder';
+import { config } from './config';
 
 const dserveLogger = bunyan.createLogger({
 	name: 'dserve',
@@ -44,7 +45,7 @@ export function getLoggerForBuild(commitHash: CommitHash) {
 			},
 			{
 				stream: process.stdout,
-				level: bunyan.INFO,
+				level: config.build.logLevel,
 			},
 		],
 		commitHash,
