@@ -19,8 +19,6 @@ export const config: AppConfig = {
     build: {
         containerCreateOptions: {
             Env: [ 'NODE_ENV=wpcalypso', 'CALYPSO_ENV=wpcalypso'],
-            ExposedPorts: { '3000/tcp': {} },
-            Tty: false,
         },
         logFilename: 'dserve-build-log.txt',
         tagPrefix: 'dserve-wpcalypso'

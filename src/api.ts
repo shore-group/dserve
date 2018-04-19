@@ -45,6 +45,7 @@ export const { refreshLocalImages, getLocalImages } = (function () {
 	return {
 		refreshLocalImages: async () => {
 			localImages = _.keyBy(await docker.listImages(), 'RepoTags');
+			localImages = _.filter(localImages, (value, key) => key.startsWith(config.build.tagPrefix));
 		},
 		getLocalImages: () => localImages,
 	};
@@ -89,10 +90,9 @@ export async function startContainer(commitHash: CommitHash) {
 		process.stdout,
 		{
 			...config.build.containerCreateOptions,
-			PortBindings: _.mapValues(
-				config.build.containerCreateOptions.ExposedPorts,
-				() => [{ HostPort: freePort.toString() }]
-			)
+			ExposedPorts: {'3000/tcp': {}},
+			PortBindings: {'3000/tcp': [{ HostPort: freePort.toString() }]},
+			Tty: false,
 		},
 		(err, succ) => err
 			? l.error({ commitHash, freePort, err }, `failed starting container`)
