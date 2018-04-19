@@ -17,6 +17,7 @@ const dserveLogger = bunyan.createLogger({
 		},
 		{
 			stream: process.stdout,
+			level: bunyan.DEBUG,
 		},
 	],
 	serializers: bunyan.stdSerializers, // allows one to use err, req, and res as special keys
