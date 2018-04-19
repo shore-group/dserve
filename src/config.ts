@@ -1,7 +1,6 @@
 import * as Dockerode from 'dockerode';
 import * as bunyan from 'bunyan';
 import * as portfinder from 'portfinder';
-import { LoggerOptions, DEBUG } from 'bunyan';
 
 interface AppConfig {
     build: BuildConfig;
@@ -32,7 +31,7 @@ export const config: AppConfig = {
             Tty: false,
         },
         logFilename: 'dserve-build-log.txt',
-        logLevel: 'debug',
+        logLevel: bunyan.DEBUG,
         tagPrefix: 'dserve-wpcalypso'
     },
 
@@ -41,6 +40,6 @@ export const config: AppConfig = {
     },
 
     server: {
-        logLevel: 'debug',
+        logLevel: bunyan.DEBUG,
     },
 };
