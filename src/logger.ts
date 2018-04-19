@@ -17,6 +17,7 @@ const dserveLogger = bunyan.createLogger({
 		},
 		{
 			stream: process.stdout,
+			level: config.server.logLevel,
 		},
 	],
 	serializers: bunyan.stdSerializers, // allows one to use err, req, and res as special keys
@@ -25,8 +26,8 @@ const dserveLogger = bunyan.createLogger({
 
 /* super convenient name */
 export const l = {
-	log: (...args: any[]) => dserveLogger.info(...args),
-	error: (...args: any[]) => dserveLogger.error(...args),
+	log: dserveLogger.info.bind(dserveLogger),
+	error: dserveLogger.error.bind(dserveLogger)
 };
 
 /**
