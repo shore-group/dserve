@@ -172,6 +172,7 @@ export async function buildImageForHash(
 	}
 
 	if (!buildStream) {
+		l.error({buildStream}, "Failed to build image but didn't throw an error" );
 		return;
 	}
 
