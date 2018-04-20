@@ -84,14 +84,15 @@ export async function startContainer(commitHash: CommitHash) {
 		return;
 	}
 
+	const exposedPort = `${config.build.exposedPort}/tcp`;
 	docker.run(
 		image,
 		[],
 		process.stdout,
 		{
 			...config.build.containerCreateOptions,
-			ExposedPorts: {'3000/tcp': {}},
-			PortBindings: {'3000/tcp': [{ HostPort: freePort.toString() }]},
+			ExposedPorts: { [exposedPort]: {} },
+			PortBindings: { [exposedPort]: [{ HostPort: freePort.toString() }] },
 			Tty: false,
 		},
 		(err, succ) => err

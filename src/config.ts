@@ -9,7 +9,8 @@ type AppConfig = Readonly<{
 }>;
 
 type BuildConfig = Readonly<{
-    containerCreateOptions: Dockerode.ContainerCreateOptions;
+    containerCreateOptions?: Dockerode.ContainerCreateOptions;
+    exposedPort: number;
     logFilename: string;
     tagPrefix: string;
 }>;
@@ -23,6 +24,7 @@ export const config: AppConfig = {
         containerCreateOptions: {
             Env: [ 'NODE_ENV=wpcalypso', 'CALYPSO_ENV=wpcalypso'],
         },
+        exposedPort: 3000,
         logFilename: 'dserve-build-log.txt',
         tagPrefix: 'dserve-wpcalypso'
     },
