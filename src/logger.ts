@@ -26,7 +26,9 @@ const dserveLogger = bunyan.createLogger({
 
 /* super convenient name */
 export const l = {
+	// @ts-ignore need to find proper type to express passing variable args
 	log: (...args: any[]) => dserveLogger.info(...args),
+	// @ts-ignore need to find proper type to express passing variable args
 	error: (...args: any[]) => dserveLogger.error(...args)
 };
 
@@ -57,6 +59,7 @@ export function getLoggerForBuild(commitHash: CommitHash) {
 	// it inherits al the same properties as the parent
 	// except we don't want any of the parents streams
 	// so this line removes them all
+	// @ts-ignore this needs to be fixed with proper typing
 	((logger as any) as Logger).streams = _.filter((logger as any).streams, { path });
 
 	return logger;
