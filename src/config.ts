@@ -1,27 +1,24 @@
 import * as Dockerode from 'dockerode';
 
-type primitive = string | number | boolean | undefined | null;
-type DeepReadonly<T> = T extends primitive ? T : DeepReadonlyObject<T>;
-type DeepReadonlyObject<T> = {
-  readonly [P in keyof T]: DeepReadonly<T[P]>
-};
-
-type AppConfig = {
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+}
+type AppConfig = Readonly<{
     build: BuildConfig;
     repo: RepoConfig;
-};
+}>;
 
-type BuildConfig = {
+type BuildConfig = Readonly<{
     containerCreateOptions: Dockerode.ContainerCreateOptions;
     logFilename: string;
     tagPrefix: string;
-};
+}>;
 
-type RepoConfig = {
+type RepoConfig = Readonly<{
     project: string;
-};
+}>;
 
-export const config: DeepReadonly<AppConfig> = {
+export const config: AppConfig = {
     build: {
         containerCreateOptions: {
             Env: [ 'NODE_ENV=wpcalypso', 'CALYPSO_ENV=wpcalypso'],
