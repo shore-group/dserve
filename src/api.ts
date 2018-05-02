@@ -44,8 +44,10 @@ export const { refreshLocalImages, getLocalImages } = (function () {
 	let localImages = {};
 	return {
 		refreshLocalImages: async () => {
-			localImages = _.keyBy(await docker.listImages(), 'RepoTags');
-			localImages = _.filter(localImages, (value, key) => key.startsWith(config.build.tagPrefix));
+			const isTag = (tag: string) => tag.startsWith( config.build.tagPrefix );
+			const hasTag = (image: Docker.ImageInfo) => image.RepoTags.some( isTag );
+
+			localImages = _.keyBy((await docker.listImages()).filter( hasTag ), 'RepoTags');
 		},
 		getLocalImages: () => localImages,
 	};
